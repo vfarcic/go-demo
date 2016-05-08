@@ -14,6 +14,6 @@ func main() {
 }
 
 	func HelloServer(w http.ResponseWriter, req *http.Request) {
-		log.Println("Request to %s", req.RequestURI)
+		log.Printf("Request to %s\n", req.RequestURI)
 		io.WriteString(w, "hello, world!\n")
 	}

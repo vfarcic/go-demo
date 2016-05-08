@@ -3,7 +3,6 @@ version: '2'
 services:
 
   app:
-    build: .
     image: ${REGISTRY}go-demo
     ports:
-      - 8080:8080
+      - 8080

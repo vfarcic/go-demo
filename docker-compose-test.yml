@@ -7,3 +7,7 @@ services:
     volumes:
       - .:/usr/src/myapp
     command: bash -c "cd /usr/src/myapp && go get -d -v -t && go build -v -o go-demo"
+
+  build:
+    build: .
+    image: ${REGISTRY}go-demo
