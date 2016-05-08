@@ -7,9 +7,16 @@ services:
     ports:
       - 8080
     mem_limit: 1g
+    depends_on:
+      - db
 
   app-small:
     image: ${REGISTRY}go-demo
     ports:
       - 8080
     mem_limit: 100m
+    depends_on:
+      - db
+
+  db:
+    image: mongo
