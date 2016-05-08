@@ -1,8 +1,9 @@
 version: '2'
 
 services:
+
   app:
     build: .
-    image: vfarcic/go-demo
+    image: ${REGISTRY}go-demo
     ports:
       - 8080:8080
