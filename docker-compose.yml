@@ -6,8 +6,6 @@ services:
     image: ${REGISTRY}go-demo
     ports:
       - 8080
-    depends_on:
-      - db
     networks:
       default:
         aliases:
