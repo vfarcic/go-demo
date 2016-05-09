@@ -1,0 +1,4 @@
+target: app
+blue_green: true
+service_path:
+  - /demo
