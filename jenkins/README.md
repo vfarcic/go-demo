@@ -1,3 +1,18 @@
+Without Git
+===========
+
+```bash
+cat jenkins/vars/dockerFlowWorkshop.groovy
+
+mkdir -p /data/jenkins/workflow-libs/vars/
+
+cp jenkins/vars/dockerFlowWorkshop.groovy \
+    /data/jenkins/workflow-libs/vars/dockerFlow.groovy
+```
+
+With Git
+========
+
 ```bash
 git clone http://10.100.198.200:8080/workflowLibs.git
 
