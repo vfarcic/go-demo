@@ -1,0 +1,23 @@
+version: '2'
+
+services:
+
+  app:
+    image: ${REGISTRY}go-demo${VERSION}
+    ports:
+      - 8080
+
+  app-blue:
+    extends:
+      service: app
+    environment:
+      - SERVICE_NAME=go-demo-blue
+
+  app-green:
+    extends:
+      service: app
+    environment:
+      - SERVICE_NAME=go-demo-green
+
+  db:
+    image: mongo

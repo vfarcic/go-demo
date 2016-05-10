@@ -6,10 +6,6 @@ services:
     image: ${REGISTRY}go-demo
     ports:
       - 8080
-    networks:
-      default:
-        aliases:
-          - go-demo-net
 
   db:
     image: mongo
