@@ -3,7 +3,7 @@ version: '2'
 services:
 
   app:
-    image: ${REGISTRY}go-demo${VERSION}
+    image: vfarcic/go-demo${VERSION}
     ports:
       - 8080
 

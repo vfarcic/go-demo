@@ -3,7 +3,7 @@ version: '2'
 services:
 
   app-big:
-    image: ${REGISTRY}go-demo
+    image: vfarcic/go-demo
     ports:
       - 8080
     mem_limit: 1g
@@ -11,7 +11,7 @@ services:
       - db
 
   app-small:
-    image: ${REGISTRY}go-demo
+    image: vfarcic/go-demo
     ports:
       - 8080
     mem_limit: 100m
