@@ -9,6 +9,6 @@ def call(project, flows) {
     ]) {
         def args = "-p " + project + " --flow=" + flows.join(" --flow=")
         sh "docker-flow ${args}"
-        sh "docker ps"
+        sh "docker ps -a"
     }
 }
