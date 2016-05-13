@@ -1,4 +1,4 @@
 node("cd") {
     checkout scm
-    dockerFlow("docker-flow", ["deploy", "proxy", "stop-old"])
+    dockerFlow("go-demo", ["deploy", "proxy", "stop-old"])
 }
