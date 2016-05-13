@@ -1,5 +1,6 @@
+def serviceName = "go-demo"
+
 node("cd") {
-    def serviceName = "go-demo"
     checkout scm
 
     stage "Deploy"
