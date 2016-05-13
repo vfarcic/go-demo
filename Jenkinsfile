@@ -1,8 +1,9 @@
 node("cd") {
+    def serviceName = "go-demo"
     checkout scm
 
     stage "Deploy"
-    dockerFlow("go-demo", ["deploy", "proxy", "stop-old"])
+    dockerFlow(serviceName, ["deploy", "proxy", "stop-old"])
     stash includes: 'consul_check.ctmpl', name: 'consul-check'
 }
 node("swarm-master") {
