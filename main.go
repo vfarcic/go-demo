@@ -1,4 +1,5 @@
 package main
+
 import (
 	"net/http"
 	"log"
@@ -7,6 +8,8 @@ import (
 	"gopkg.in/mgo.v2/bson"
 	"fmt"
 	"os"
+	"time"
+	"strconv"
 )
 
 var coll *mgo.Collection
@@ -38,6 +41,11 @@ func main() {
 
 func HelloServer(w http.ResponseWriter, req *http.Request) {
 	log.Printf("%s request to %s\n", req.Method, req.RequestURI)
+	delay := req.URL.Query().Get("delay")
+	if len(delay) > 0 {
+		delayNum, _ := strconv.Atoi(delay)
+		time.Sleep(time.Duration(delayNum) * time.Millisecond)
+	}
 	io.WriteString(w, "hello, world!\n")
 }
 
