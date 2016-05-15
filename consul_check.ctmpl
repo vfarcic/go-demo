@@ -10,6 +10,12 @@
       "http": "http://{{key "proxy/ip"}}/demo/person",
       "interval": "10s",
       "timeout": "1s"
+    }, {
+      "id": "rtime",
+      "name": "Avg. response time",
+      "script": "/data/consul/scripts/rtime.sh go-demo-app 1000 2000",
+      "interval": "10s",
+      "timeout": "5s"
     }]
   }
 }
