@@ -5,12 +5,15 @@ node("cd") {
 
     stage "Deploy"
     dockerFlow(serviceName, ["deploy", "proxy", "stop-old"])
-    stash includes: 'consul_check.ctmpl', name: 'consul-check'
+    stash includes: 'consul_*.ctmpl', name: 'consul'
 }
 node("swarm-master") {
     stage "Health"
-    unstash "consul-check"
+    unstash "consul"
     sh "sudo consul-template -consul localhost:8500 \
-        -template 'consul_check.ctmpl:/data/consul/config/${serviceName}.json:killall -HUP consul' \
+        -template 'consul_service.ctmpl:/data/consul/config/${serviceName}.json' \
+        -once"
+    sh "sudo consul-template -consul localhost:8500 \
+        -template 'consul_check.ctmpl:/data/consul/config/${serviceName}_check.json:killall -HUP consul' \
         -once"
 }
