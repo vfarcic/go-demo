@@ -1,24 +1,40 @@
 package main
 
 import (
-	"net/http"
-	"log"
-	"io"
 	"gopkg.in/mgo.v2"
+	"io"
+	"log"
+	"net/http"
+	"os"
+	"strconv"
+	"time"
 	"gopkg.in/mgo.v2/bson"
 	"fmt"
-	"os"
-	"time"
-	"strconv"
+	"strings"
 )
 
 var coll *mgo.Collection
+var sleep = time.Sleep
+var upsertId = coll.UpsertId
+var logFatal = log.Fatal
+var logPrintf = log.Printf
+var httpHandleFunc = http.HandleFunc
+var httpListenAndServe = http.ListenAndServe
 
 type Person struct {
 	Name string
 }
 
-func init() {
+// TODO: Test
+
+func main() {
+	setupDb()
+	RunServer()
+}
+
+// TODO: Test
+
+func setupDb() {
 	db := os.Getenv("DB")
 	if len(db) == 0 {
 		db = "localhost"
@@ -30,41 +46,46 @@ func init() {
 	coll = session.DB("test").C("people")
 }
 
-func main() {
-	http.HandleFunc("/demo/hello", HelloServer)
-	http.HandleFunc("/demo/person", PersonServer)
-	err := http.ListenAndServe(":8080", nil)
-	if err != nil {
-		log.Fatal("ListenAndServe: ", err)
-	}
+func RunServer() {
+	httpHandleFunc("/demo/hello", HelloServer)
+	httpHandleFunc("/demo/person", PersonServer)
+	logFatal("ListenAndServe: ", httpListenAndServe(":8080", nil))
 }
 
 func HelloServer(w http.ResponseWriter, req *http.Request) {
-	log.Printf("%s request to %s\n", req.Method, req.RequestURI)
+	logPrintf("%s request to %s\n", req.Method, req.RequestURI)
 	delay := req.URL.Query().Get("delay")
 	if len(delay) > 0 {
 		delayNum, _ := strconv.Atoi(delay)
-		time.Sleep(time.Duration(delayNum) * time.Millisecond)
+		sleep(time.Duration(delayNum) * time.Millisecond)
 	}
 	io.WriteString(w, "hello, world!\n")
 }
 
 func PersonServer(w http.ResponseWriter, req *http.Request) {
-	log.Printf("%s request to %s\n", req.Method, req.RequestURI)
+	logPrintf("%s request to %s\n", req.Method, req.RequestURI)
+
 	if req.Method == "PUT" {
 		name := req.URL.Query().Get("name")
-		if _, err := coll.UpsertId(name, &Person{
+		if _, err := upsertId(name, &Person{
 			Name: name,
 		}); err != nil {
 			panic(err)
 		}
 	} else {
 		var res []Person
-		if err := coll.Find(bson.M{}).All(&res); err != nil {
+		if err := findPeople(&res); err != nil {
 			panic(err)
 		}
+		var names []string
 		for _, p := range res {
+			names = append(names, p.Name)
 			io.WriteString(w, fmt.Sprintln(p.Name))
 		}
+		io.WriteString(w, strings.Join(names, "\n"))
 	}
+}
+
+var findPeople = func(res *[]Person) error {
+	return coll.Find(bson.M{}).All(res)
 }
