@@ -15,7 +15,6 @@ import (
 
 var coll *mgo.Collection
 var sleep = time.Sleep
-var upsertId = coll.UpsertId
 var logFatal = log.Fatal
 var logPrintf = log.Printf
 var httpHandleFunc = http.HandleFunc
@@ -89,3 +88,8 @@ func PersonServer(w http.ResponseWriter, req *http.Request) {
 var findPeople = func(res *[]Person) error {
 	return coll.Find(bson.M{}).All(res)
 }
+
+var upsertId = func(id interface{}, update interface{}) (info *mgo.ChangeInfo, err error) {
+	return coll.UpsertId(id, update)
+}
+

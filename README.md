@@ -15,5 +15,5 @@ docker push vfarcic/go-demo:1.0
 
 docker push vfarcic/go-demo:1.1
 
-docker-compose up -d
+docker-compose up -d db app
 ```
