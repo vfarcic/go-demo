@@ -2,12 +2,6 @@ version: '2'
 
 services:
 
-  build:
-    image: golang:1.6
-    volumes:
-      - .:/usr/src/myapp
-    command: bash -c "cd /usr/src/myapp && go get -d -v -t && go build -v -o go-demo"
-
   unit:
     image: golang:1.6
     volumes:
