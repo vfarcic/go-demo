@@ -7,3 +7,32 @@ services:
     volumes:
       - .:/usr/src/myapp
     command: bash -c "cd /usr/src/myapp && go get -d -v -t && go test --cover -v ./... && go build -v -o go-demo"
+
+  staging-dep:
+    extends:
+      file: docker-compose.yml
+      service: app
+    ports:
+      - 8080:8080
+    depends_on:
+      - db
+
+  staging:
+    extends:
+      service: production
+    environment:
+      - HOST_IP=${HOST_IP}:8080
+
+  production:
+    image: golang:1.6
+    volumes:
+      - .:/usr/src/myapp
+      - /tmp/go:/go
+    environment:
+      - HOST_IP=${HOST_IP}
+    command: bash -c "cd /usr/src/myapp && go get -d -v -t && go test --tags integration -v"
+
+  db:
+    extends:
+      file: docker-compose.yml
+      service: db
