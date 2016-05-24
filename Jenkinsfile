@@ -10,10 +10,10 @@ node("cd") {
 node("swarm-master") {
     stage "Health"
     unstash "consul"
-    sh "sudo consul-template -consul localhost:8500 \
+    sh "sudo consul-template -consul 10.100.192.200:8500 \
         -template 'consul_service.ctmpl:/data/consul/config/${serviceName}.json' \
         -once"
-    sh "sudo consul-template -consul localhost:8500 \
+    sh "sudo consul-template -consul 10.100.192.200:8500 \
         -template 'consul_check.ctmpl:/data/consul/config/${serviceName}_check.json:killall -HUP consul' \
         -once"
 }
