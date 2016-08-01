@@ -1,0 +1,10 @@
+version: '2'
+
+services:
+
+  app:
+    image: vfarcic/go-demo
+    mem_limit: 500m
+
+  db:
+    image: mongo
