@@ -4,7 +4,8 @@ services:
 
   app:
     image: vfarcic/go-demo
-    mem_limit: 500m
+    mem_limit: 250m
 
   db:
     image: mongo
+    mem_limit: 500m
