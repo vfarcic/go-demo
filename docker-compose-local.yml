@@ -1,0 +1,11 @@
+version: '2'
+
+services:
+
+  app:
+    image: go-demo
+    ports:
+      - 8080
+
+  db:
+    image: mongo
