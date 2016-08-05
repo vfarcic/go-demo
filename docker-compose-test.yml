@@ -21,6 +21,7 @@ services:
   staging:
     extends:
       service: production
+    network_mode: "host"
     environment:
       - HOST_IP=${HOST_IP}:8080
 
