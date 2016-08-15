@@ -23,6 +23,7 @@ services:
       service: production
     environment:
       - HOST_IP=${HOST_IP}:8080
+    network_mode: host
 
   production:
     image: golang:1.6
