@@ -22,7 +22,7 @@ services:
     extends:
       service: production
     environment:
-      - HOST_IP=${HOST_IP}:8080
+      - HOST_IP=localhost:8080
     network_mode: host
 
   production:
