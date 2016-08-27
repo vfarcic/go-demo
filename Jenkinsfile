@@ -13,6 +13,11 @@ node("cd") {
     stage "Deploy"
     dockerFlow(serviceName, ["deploy", "proxy", "stop-old"])
 
+    stage "Staging Tests"
+    withEnv(["HOST_IP=10.100.198.200"]) {
+        sh "docker-compose -f docker-compose-test.yml run --rm staging"
+    }
+
     stage "Production Tests"
     withEnv(["HOST_IP=10.100.198.200"]) {
         sh "docker-compose -f docker-compose-test.yml run --rm production"
