@@ -11,7 +11,8 @@ services:
     volumes:
       - .:/usr/src/myapp
       - /tmp/go:/go
-    command: bash -c "cd /usr/src/myapp && go get -d -v -t && go test --cover -v ./... && go build -v -o go-demo"
+    working_dir: /usr/src/myapp
+    command: bash -c "go get -d -v -t && go test --cover -v ./... && go build -v -o go-demo"
 
   staging-dep:
     image: go-demo
