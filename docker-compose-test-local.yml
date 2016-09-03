@@ -27,14 +27,14 @@ services:
     environment:
       - HOST_IP=localhost:8080
     network_mode: host
-    command: bash -c "cd /usr/src/myapp && go get -d -v -t && go test --tags integration -v"
+    command: bash -c "go get -d -v -t && go test --tags integration -v"
 
   production:
     extends:
       service: unit
     environment:
       - HOST_IP=${HOST_IP}
-    command: bash -c "cd /usr/src/myapp && go get -d -v -t && go test --tags integration -v"
+    command: bash -c "go get -d -v -t && go test --tags integration -v"
 
   db:
     image: mongo
