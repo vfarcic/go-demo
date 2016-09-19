@@ -1,37 +1,70 @@
-def serviceName = "go-demo"
+node("docker") {
 
-node("cd") {
-    checkout scm
+  withEnv([
+    "COMPOSE_FILE=docker-compose-test-local.yml"
+  ]) {
 
-    stage "Unit Tests"
-    sh "docker-compose -f docker-compose-test.yml run --rm unit"
-
-    stage "Build"
-    sh "docker build -t vfarcic/go-demo ."
-    // sh "docker push vfarcic/go-demo"
-
-    stage "Deploy"
-    dockerFlow(serviceName, ["deploy", "proxy", "stop-old"])
-
-    stage "Staging Tests"
-    withEnv(["HOST_IP=10.100.198.200"]) {
-        sh "docker-compose -f docker-compose-test.yml run --rm staging"
+    stage("Pull") {
+      git "https://github.com/vfarcic/go-demo.git"
     }
 
-    stage "Production Tests"
-    withEnv(["HOST_IP=10.100.198.200"]) {
-        sh "docker-compose -f docker-compose-test.yml run --rm production"
+    stage("Unit") {
+      sh "docker-compose run --rm unit"
+      sh "docker-compose build app"
     }
 
-    stash includes: 'consul_*.ctmpl', name: 'consul'
-}
-node("swarm-master") {
-    stage "Health"
-    unstash "consul"
-    sh "sudo consul-template -consul 10.100.192.200:8500 \
-        -template 'consul_service.ctmpl:/data/consul/config/${serviceName}.json' \
-        -once"
-    sh "sudo consul-template -consul 10.100.192.200:8500 \
-        -template 'consul_check.ctmpl:/data/consul/config/${serviceName}_check.json:killall -HUP consul' \
-        -once"
+    stage("Staging") {
+      try {
+        sh "docker-compose up -d staging-dep"
+        sh "docker-compose run --rm staging"
+      } catch(e) {
+        error "Staging failed"
+      } finally {
+        sh "docker-compose down"
+      }
+    }
+
+    stage("Publish") {
+      sh "docker tag go-demo \
+        localhost:5000/go-demo:2.${env.BUILD_NUMBER}"
+      sh "docker push \
+        localhost:5000/go-demo:2.${env.BUILD_NUMBER}"
+    }
+
+    stage("Prod-like") {
+      withEnv([
+        "DOCKER_TLS_VERIFY=1",
+        "DOCKER_HOST=tcp://${env.PROD_LIKE_IP}:2376",
+        "DOCKER_CERT_PATH=/machines/${env.PROD_LIKE_NAME}"
+      ]) {
+        sh "docker service update \
+          --image localhost:5000/go-demo:2.${env.BUILD_NUMBER} \
+          go-demo"
+      }
+      withEnv(["HOST_IP=localhost"]) {
+        for (i = 0; i <10; i++) {
+          sh "docker-compose run --rm production"
+        }
+      }
+
+    }
+
+    stage("Production") {
+      withEnv([
+        "DOCKER_TLS_VERIFY=1",
+        "DOCKER_HOST=tcp://${env.PROD_IP}:2376",
+        "DOCKER_CERT_PATH=/machines/${env.PROD_NAME}"
+      ]) {
+        sh "docker service update \
+          --image localhost:5000/go-demo:2.${env.BUILD_NUMBER} \
+          go-demo"
+      }
+      withEnv(["HOST_IP=${env.PROD_IP}"]) {
+        for (i = 0; i <10; i++) {
+          sh "docker-compose run --rm production"
+        }
+      }
+
+    }
+  }
 }
