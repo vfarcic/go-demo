@@ -11,6 +11,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 	"fmt"
 	"strings"
+	"math/rand"
 )
 
 var coll *mgo.Collection
@@ -48,6 +49,7 @@ func setupDb() {
 func RunServer() {
 	httpHandleFunc("/demo/hello", HelloServer)
 	httpHandleFunc("/demo/person", PersonServer)
+	httpHandleFunc("/demo/random-error", RandomErrorServer)
 	logFatal("ListenAndServe: ", httpListenAndServe(":8080", nil))
 }
 
@@ -59,6 +61,20 @@ func HelloServer(w http.ResponseWriter, req *http.Request) {
 		sleep(time.Duration(delayNum) * time.Millisecond)
 	}
 	io.WriteString(w, "hello, world!\n")
+}
+
+func RandomErrorServer(w http.ResponseWriter, req *http.Request) {
+	logPrintf("%s request to %s\n", req.Method, req.RequestURI)
+	rand.Seed(time.Now().UnixNano())
+	n := rand.Intn(10)
+	if n == 0 {
+		w.WriteHeader(http.StatusInternalServerError)
+		msg := "ERROR: Something, somewhere, went wrong!\n"
+		logPrintf(msg)
+		io.WriteString(w, msg)
+	} else {
+		io.WriteString(w, "Everything is still OK\n")
+	}
 }
 
 func PersonServer(w http.ResponseWriter, req *http.Request) {

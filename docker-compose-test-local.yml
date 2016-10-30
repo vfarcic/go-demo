@@ -38,4 +38,4 @@ services:
     command: bash -c "go get -d -v -t && go test --tags integration -v"
 
   db:
-    image: mongo
+    image: mongo:3.2.10

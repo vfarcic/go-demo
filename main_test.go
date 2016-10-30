@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/mgo.v2"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 	"reflect"
@@ -53,6 +52,21 @@ func (s *MainTestSuite) Test_RunServer_InvokesHandleFuncWithPersonServer() {
 	s.True(wasCalled)
 }
 
+func (s *MainTestSuite) Test_RunServer_InvokesHandleFuncWithRandomErrorServer() {
+	httpHandleFuncOrig := httpHandleFunc
+	defer func() { httpHandleFunc = httpHandleFuncOrig }()
+	wasCalled := false
+	httpHandleFunc = func(pattern string, handler func(http.ResponseWriter, *http.Request)) {
+		if pattern == "/demo/random-error" && reflect.ValueOf(handler) == reflect.ValueOf(RandomErrorServer) {
+			wasCalled = true
+		}
+	}
+
+	RunServer()
+
+	s.True(wasCalled)
+}
+
 func (s *MainTestSuite) Test_RunServer_InvokesListenAndServe() {
 	actual := ""
 	httpListenAndServe = func(addr string, handler http.Handler) error {
@@ -63,6 +77,30 @@ func (s *MainTestSuite) Test_RunServer_InvokesListenAndServe() {
 	RunServer()
 
 	s.Equal(":8080", actual)
+}
+
+// RandomErrorServer
+
+func (s *MainTestSuite) Test_HelloServer_WritesOk() {
+	req, _ := http.NewRequest("GET", "/demo/random-error", nil)
+	w := getResponseWriterMock()
+
+	for i := 0; i <= 3; i++ {
+		RandomErrorServer(w, req)
+	}
+
+	w.AssertCalled(s.T(), "Write", []byte("Everything is still OK\n"))
+}
+
+func (s *MainTestSuite) Test_HelloServer_WritesNokEventually() {
+	req, _ := http.NewRequest("GET", "/demo/random-error", nil)
+	w := getResponseWriterMock()
+
+	for i := 0; i <= 30; i++ {
+		RandomErrorServer(w, req)
+	}
+
+	w.AssertCalled(s.T(), "Write", []byte("ERROR: Something, somewhere, went wrong!\n"))
 }
 
 // HelloServer
@@ -159,64 +197,6 @@ func (s *MainTestSuite) Test_PersonServer_Panics_WhenFindReturnsError() {
 // Suite
 
 func TestMainSuite(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(HelloServer))
-	//	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	//		actualPath := r.URL.Path
-	//		if r.Method == "PUT" {
-	//			defer r.Body.Close()
-	//			body, _ := ioutil.ReadAll(r.Body)
-	//			switch actualPath {
-	//			case fmt.Sprintf("/v1/kv/docker-flow/%s/color", s.ServiceName):
-	//				s.ConsulRequestBody.ServiceColor = string(body)
-	//			case fmt.Sprintf("/v1/kv/docker-flow/%s/path", s.ServiceName):
-	//				s.ConsulRequestBody.ServicePath = strings.Split(string(body), ",")
-	//			case fmt.Sprintf("/v1/kv/docker-flow/%s/domain", s.ServiceName):
-	//				s.ConsulRequestBody.ServiceDomain = string(body)
-	//			case fmt.Sprintf("/v1/kv/docker-flow/%s/pathtype", s.ServiceName):
-	//				s.ConsulRequestBody.PathType = string(body)
-	//			case fmt.Sprintf("/v1/kv/docker-flow/%s/skipcheck", s.ServiceName):
-	//				v, _ := strconv.ParseBool(string(body))
-	//				s.ConsulRequestBody.SkipCheck = v
-	//			}
-	//		} else if r.Method == "GET" {
-	//			switch actualPath {
-	//			case "/v1/catalog/services":
-	//				w.WriteHeader(http.StatusOK)
-	//				w.Header().Set("Content-Type", "application/json")
-	//				data := map[string][]string{"service1": []string{}, "service2": []string{}, s.ServiceName: []string{}}
-	//				js, _ := json.Marshal(data)
-	//				w.Write(js)
-	//			case fmt.Sprintf("/v1/kv/docker-flow/%s/%s", s.ServiceName, PATH_KEY):
-	//				if r.URL.RawQuery == "raw" {
-	//					w.WriteHeader(http.StatusOK)
-	//					w.Write([]byte(strings.Join(s.ServicePath, ",")))
-	//				}
-	//			case fmt.Sprintf("/v1/kv/docker-flow/%s/%s", s.ServiceName, COLOR_KEY):
-	//				if r.URL.RawQuery == "raw" {
-	//					w.WriteHeader(http.StatusOK)
-	//					w.Write([]byte("orange"))
-	//				}
-	//			case fmt.Sprintf("/v1/kv/docker-flow/%s/%s", s.ServiceName, DOMAIN_KEY):
-	//				if r.URL.RawQuery == "raw" {
-	//					w.WriteHeader(http.StatusOK)
-	//					w.Write([]byte(s.ServiceDomain))
-	//				}
-	//			case fmt.Sprintf("/v1/kv/docker-flow/%s/%s", s.ServiceName, PATH_TYPE_KEY):
-	//				if r.URL.RawQuery == "raw" {
-	//					w.WriteHeader(http.StatusOK)
-	//					w.Write([]byte(s.PathType))
-	//				}
-	//			case fmt.Sprintf("/v1/kv/docker-flow/%s/%s", s.ServiceName, SKIP_CHECK_KEY):
-	//				if r.URL.RawQuery == "raw" {
-	//					w.WriteHeader(http.StatusOK)
-	//					w.Write([]byte(fmt.Sprintf("%t", s.SkipCheck)))
-	//				}
-	//			default:
-	//				w.WriteHeader(http.StatusNotFound)
-	//			}
-	//		}
-	//	}))
-	defer server.Close()
 	logFatalOrig := logFatal
 	defer func() { logFatal = logFatalOrig }()
 	logFatal = func(v ...interface{}) {}

@@ -19,4 +19,4 @@ services:
       - db
 
   db:
-    image: mongo
+    image: mongo:3.2.10

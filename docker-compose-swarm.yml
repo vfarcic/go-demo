@@ -7,5 +7,5 @@ services:
     mem_limit: 250m
 
   db:
-    image: mongo
+    image: mongo:3.2.10
     mem_limit: 500m
