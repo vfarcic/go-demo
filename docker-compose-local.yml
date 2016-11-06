@@ -12,7 +12,7 @@ services:
 
   registry:
     container_name: registry
-    image: registry
+    image: registry:2.5.0
     ports:
       - 5000:5000
     volumes:
@@ -21,7 +21,7 @@ services:
 
   consul-server:
     container_name: consul
-    image: consul
+    image: consul:0.7.0
     network_mode: host
     environment:
       - 'CONSUL_LOCAL_CONFIG={"skip_leave_on_interrupt": true}'
@@ -30,7 +30,7 @@ services:
 
   consul-agent:
     container_name: consul
-    image: consul
+    image: consul:0.7.0
     network_mode: host
     environment:
       - 'CONSUL_LOCAL_CONFIG={"leave_on_terminate": true}'
