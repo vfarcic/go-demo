@@ -96,7 +96,7 @@ func (s *MainTestSuite) Test_HelloServer_WritesNokEventually() {
 	req, _ := http.NewRequest("GET", "/demo/random-error", nil)
 	w := getResponseWriterMock()
 
-	for i := 0; i <= 30; i++ {
+	for i := 0; i <= 50; i++ {
 		RandomErrorServer(w, req)
 	}
 
