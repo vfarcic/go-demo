@@ -1,37 +1,33 @@
-def serviceName = "go-demo"
+node("docker") {
 
-node("cd") {
-    checkout scm
+  git "https://github.com/vfarcic/go-demo.git"
 
-    stage "Unit Tests"
-    sh "docker-compose -f docker-compose-test.yml run --rm unit"
+  stage "Unit"
+  sh "docker-compose -f docker-compose-test.yml run --rm unit"
+  sh "docker build -t go-demo ."
 
-    stage "Build"
-    sh "docker build -t vfarcic/go-demo ."
-    // sh "docker push vfarcic/go-demo"
+  stage "Staging"
+  try {
+    sh "docker-compose -f docker-compose-test-local.yml up -d staging-dep"
+    sh 'HOST_IP=localhost docker-compose -f docker-compose-test-local.yml run --rm staging'
+  } catch(e) {
+    error "Staging failed"
+  } finally {
+    sh "docker-compose -f docker-compose-test-local.yml down"
+  }
 
-    stage "Deploy"
-    dockerFlow(serviceName, ["deploy", "proxy", "stop-old"])
+  stage "Publish"
+  sh "docker tag go-demo localhost:5000/go-demo:2.${env.BUILD_NUMBER}"
+  sh "docker push localhost:5000/go-demo:2.${env.BUILD_NUMBER}"
 
-    stage "Staging Tests"
-    withEnv(["HOST_IP=10.100.198.200"]) {
-        sh "docker-compose -f docker-compose-test.yml run --rm staging"
-    }
+  stage "Production"
+  withEnv([
+    "DOCKER_TLS_VERIFY=1",
+    "DOCKER_HOST=tcp://${env.PROD_IP}:2376",
+    "DOCKER_CERT_PATH=/machines/${env.PROD_NAME}"
+  ]) {
+    sh "docker service update --image localhost:5000/go-demo:2.${env.BUILD_NUMBER} go-demo"
+  }
+  sh "HOST_IP=${env.PROD_IP} docker-compose -f docker-compose-test-local.yml run --rm production"
 
-    stage "Production Tests"
-    withEnv(["HOST_IP=10.100.198.200"]) {
-        sh "docker-compose -f docker-compose-test.yml run --rm production"
-    }
-
-    stash includes: 'consul_*.ctmpl', name: 'consul'
-}
-node("swarm-master") {
-    stage "Health"
-    unstash "consul"
-    sh "sudo consul-template -consul 10.100.192.200:8500 \
-        -template 'consul_service.ctmpl:/data/consul/config/${serviceName}.json' \
-        -once"
-    sh "sudo consul-template -consul 10.100.192.200:8500 \
-        -template 'consul_check.ctmpl:/data/consul/config/${serviceName}_check.json:killall -HUP consul' \
-        -once"
 }
