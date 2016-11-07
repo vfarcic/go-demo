@@ -16,18 +16,4 @@ node("docker") {
     sh "docker-compose -f docker-compose-test-local.yml down"
   }
 
-  stage "Publish"
-  sh "docker tag go-demo localhost:5000/go-demo:2.${env.BUILD_NUMBER}"
-  sh "docker push localhost:5000/go-demo:2.${env.BUILD_NUMBER}"
-
-  stage "Production"
-  withEnv([
-    "DOCKER_TLS_VERIFY=1",
-    "DOCKER_HOST=tcp://${env.PROD_IP}:2376",
-    "DOCKER_CERT_PATH=/machines/${env.PROD_NAME}"
-  ]) {
-    sh "docker service update --image localhost:5000/go-demo:2.${env.BUILD_NUMBER} go-demo"
-  }
-  sh "HOST_IP=${env.PROD_IP} docker-compose -f docker-compose-test-local.yml run --rm production"
-
 }
