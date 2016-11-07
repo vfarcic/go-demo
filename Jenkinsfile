@@ -14,7 +14,7 @@ node("docker") {
     stage "Staging"
     try {
       sh "docker-compose up -d staging-dep"
-      sh 'HOST_IP=localhost docker-compose run --rm staging'
+      sh "docker-compose run --rm staging"
     } catch(e) {
       error "Staging failed"
     } finally {
