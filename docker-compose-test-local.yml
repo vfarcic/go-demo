@@ -16,6 +16,8 @@ services:
 
   staging-dep:
     image: go-demo
+    ports:
+      - 8080:8080
     depends_on:
       - db
 
@@ -23,7 +25,7 @@ services:
     extends:
       service: unit
     environment:
-      - HOST_IP=staging-dep:8080
+      - HOST_IP=localhost:8080
     network_mode: host
     command: bash -c "go get -d -v -t && go test --tags integration -v"
 
