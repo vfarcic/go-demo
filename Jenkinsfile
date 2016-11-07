@@ -1,6 +1,6 @@
 node("docker") {
 
-  git "https://github.com/vfarcic/go-demo.git"
+  checkout scm
 
   stage "Unit"
   sh "docker-compose -f docker-compose-test.yml run --rm unit"
