@@ -33,6 +33,7 @@ node("docker") {
     ]) {
       sh "docker service update --image localhost:5000/go-demo:2.${env.BUILD_NUMBER} go-demo"
     }
+    echo "xxx"
     10.times {
       sh "HOST_IP=${env.PROD_IP} docker-compose run --rm production"
     }
