@@ -34,25 +34,23 @@ input "Proceed with deployment?"
 input message: 'Do you really want to proceed with deployment?', submitter: 'admin'
 
 node("docker") {
-    unstash "docker-compose-test-local.yml"
+  unstash "docker-compose-test-local.yml"
 
-    stage "Production"
+  stage "Production"
+  withEnv([
+    "DOCKER_TLS_VERIFY=1",
+    "DOCKER_HOST=tcp://${env.PROD_IP}:2376",
+    "DOCKER_CERT_PATH=/machines/${env.PROD_NAME}"
+  ]) {
+    sh "docker service update --image localhost:5000/go-demo:2.${env.BUILD_NUMBER} go-demo"
+  }
     withEnv([
-      "DOCKER_TLS_VERIFY=1",
-      "DOCKER_HOST=tcp://${env.PROD_IP}:2376",
-      "DOCKER_CERT_PATH=/machines/${env.PROD_NAME}"
+      "COMPOSE_FILE=docker-compose-test-local.yml",
+      "COMPOSE_PROJECT_NAME=go-demo-master"
     ]) {
-      sh "docker service update --image localhost:5000/go-demo:2.${env.BUILD_NUMBER} go-demo"
+    for (i = 0; i < 10; i++) {
+      sh "HOST_IP=${env.PROD_IP} docker-compose run --rm production"
     }
-      withEnv([
-        "COMPOSE_FILE=docker-compose-test-local.yml",
-        "COMPOSE_PROJECT_NAME=go-demo-master"
-      ]) {
-      for (i = 0; i < 10; i++) {
-        sh "HOST_IP=${env.PROD_IP} docker-compose run --rm production"
-      }
-    }
-
   }
 
 }
