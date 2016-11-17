@@ -24,7 +24,13 @@ node("docker") {
     stage "Publish"
     sh "docker tag go-demo localhost:5000/go-demo:2.${env.BUILD_NUMBER}"
     sh "docker push localhost:5000/go-demo:2.${env.BUILD_NUMBER}"
+}
 
+input "Proceed with deployment?"
+
+input message: 'Do you really want to proceed with deployment?', submitter: 'admin'
+
+node("docker") {
     stage "Production"
     withEnv([
       "DOCKER_TLS_VERIFY=1",
