@@ -4,7 +4,7 @@ node("docker") {
 
   withEnv([
     "COMPOSE_FILE=docker-compose-test-local.yml",
-    "COMPOSE_PROJECT_NAME=go-demo-master"
+    "COMPOSE_PROJECT_NAME=go-demo-trust-issues"
   ]) {
 
     stage "Unit"
@@ -46,7 +46,7 @@ node("docker") {
   }
     withEnv([
       "COMPOSE_FILE=docker-compose-test-local.yml",
-      "COMPOSE_PROJECT_NAME=go-demo-master"
+      "COMPOSE_PROJECT_NAME=go-demo-trust-issues"
     ]) {
     for (i = 0; i < 10; i++) {
       sh "HOST_IP=${env.PROD_IP} docker-compose run --rm production"
