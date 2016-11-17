@@ -24,6 +24,9 @@ node("docker") {
     stage "Publish"
     sh "docker tag go-demo localhost:5000/go-demo:2.${env.BUILD_NUMBER}"
     sh "docker push localhost:5000/go-demo:2.${env.BUILD_NUMBER}"
+
+    stash "docker-compose-test-local.yml"
+  }
 }
 
 input "Proceed with deployment?"
@@ -31,6 +34,8 @@ input "Proceed with deployment?"
 input message: 'Do you really want to proceed with deployment?', submitter: 'admin'
 
 node("docker") {
+    unstash "docker-compose-test-local.yml"
+
     stage "Production"
     withEnv([
       "DOCKER_TLS_VERIFY=1",
@@ -39,8 +44,13 @@ node("docker") {
     ]) {
       sh "docker service update --image localhost:5000/go-demo:2.${env.BUILD_NUMBER} go-demo"
     }
-    for (i = 0; i < 10; i++) {
-      sh "HOST_IP=${env.PROD_IP} docker-compose run --rm production"
+      withEnv([
+        "COMPOSE_FILE=docker-compose-test-local.yml",
+        "COMPOSE_PROJECT_NAME=go-demo-master"
+      ]) {
+      for (i = 0; i < 10; i++) {
+        sh "HOST_IP=${env.PROD_IP} docker-compose run --rm production"
+      }
     }
 
   }
