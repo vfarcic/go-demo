@@ -4,7 +4,7 @@ node("docker") {
 
   withEnv([
     "COMPOSE_FILE=docker-compose-test-local.yml",
-    "COMPOSE_PROJECT_NAME=go-demo-master"
+    "COMPOSE_PROJECT_NAME=go-demo-notif"
   ]) {
 
     stage "Unit"
