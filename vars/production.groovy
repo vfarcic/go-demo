@@ -1,4 +1,5 @@
 def call(project) {
+    stage "Production"
     withEnv([
         "COMPOSE_FILE=docker-compose-test-local.yml",
         "COMPOSE_PROJECT_NAME=${project}-${env.BRANCH_NAME}",
