@@ -5,18 +5,24 @@ services:
   main:
     image: vfarcic/go-demo
     environment:
-      - DB=go-demo-db
+      - DB=db
     networks:
       - proxy
-    labels:
-      - com.df.notify=true
-      - com.df.distribute=true
-      - com.df.servicePath=/demo
-      - com.df.port=8080
+      - default
+    deploy:
+      labels:
+        - com.df.notify=true
+        - com.df.distribute=true
+        - com.df.servicePath=/demo
+        - com.df.port=8080
 
   db:
     image: mongo
+    networks:
+      - default
 
 networks:
+  default:
+    external: false
   proxy:
     external: true
