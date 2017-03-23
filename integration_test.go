@@ -33,7 +33,7 @@ import (
 
 type IntegrationTestSuite struct {
 	suite.Suite
-	hostIp      string
+	hostIp string
 }
 
 func (s *IntegrationTestSuite) SetupTest() {

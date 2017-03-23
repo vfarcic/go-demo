@@ -6,9 +6,9 @@ import (
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/mgo.v2"
 	"net/http"
+	"reflect"
 	"testing"
 	"time"
-	"reflect"
 )
 
 // Setup
@@ -166,8 +166,8 @@ func (s *MainTestSuite) Test_PersonServer_Panics_WhenUpsertIdReturnsError() {
 func (s *MainTestSuite) Test_PersonServer_WritesPeople() {
 	findPeopleOrig := findPeople
 	people := []Person{
-		Person{Name: "Viktor"},
-		Person{Name: "Sara"},
+		{Name: "Viktor"},
+		{Name: "Sara"},
 	}
 	defer func() { findPeople = findPeopleOrig }()
 	findPeople = func(res *[]Person) error {

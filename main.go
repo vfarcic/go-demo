@@ -1,17 +1,17 @@
 package main
 
 import (
+	"fmt"
 	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 	"io"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"strconv"
-	"time"
-	"gopkg.in/mgo.v2/bson"
-	"fmt"
 	"strings"
-	"math/rand"
+	"time"
 )
 
 var coll *mgo.Collection
@@ -108,4 +108,3 @@ var findPeople = func(res *[]Person) error {
 var upsertId = func(id interface{}, update interface{}) (info *mgo.ChangeInfo, err error) {
 	return coll.UpsertId(id, update)
 }
-
