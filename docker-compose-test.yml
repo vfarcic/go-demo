@@ -8,7 +8,7 @@ services:
       - .:/usr/src/myapp
       - /tmp/go:/go
     working_dir: /usr/src/myapp
-    command: bash -c "go get -d -v -t && go test --cover -v ./... && go build -v -o go-demo"
+    command: bash -c "pwd && go get -d -v -t && go test --cover -v ./... && go build -v -o go-demo"
 
   staging-dep:
     extends:
