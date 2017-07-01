@@ -34,7 +34,7 @@ services:
     environment:
       - HOST_IP=${HOST_IP}
     network_mode: host
-    command: bash -c "go get -d -v -t && go test --tags integration -v"
+    command: bash -c "go get -d -v -t && go test -v --run ProductionTest"
 
   db:
     image: mongo:3.2.10
