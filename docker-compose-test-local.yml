@@ -33,8 +33,9 @@ services:
       service: unit
     environment:
       - HOST_IP=${HOST_IP}
+      - DURATION=1
     network_mode: host
-    command: bash -c "go get -d -v -t && go test -v --run ProductionTest"
+    command: bash -c "go get -d -v -t && go test -v --tags production"
 
   db:
     image: mongo:3.2.10
