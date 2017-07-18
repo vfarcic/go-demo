@@ -8,64 +8,41 @@ import (
 	"net/http"
 	"testing"
 	"time"
-	"reflect"
 )
 
-// Setup
+// Suite
 
 type MainTestSuite struct {
 	suite.Suite
 }
 
-func (s *MainTestSuite) SetupTest() {
+// Suite
+
+func TestMainSuite(t *testing.T) {
+	logFatalOrig := logFatal
+	logPrintfOrig := logPrintf
+	httpListenAndServeOrig := httpListenAndServe
+	defer func() {
+		logFatal = logFatalOrig
+		logPrintf = logPrintfOrig
+		httpListenAndServe = httpListenAndServeOrig
+	}()
+	logFatal = func(v ...interface{}) {}
+	logPrintf = func(format string, v ...interface{}) {}
+	httpListenAndServe = func(addr string, handler http.Handler) error { return nil }
+	suite.Run(t, new(MainTestSuite))
+}
+
+
+func (s *MainTestSuite) SetupTest() {}
+
+// init
+
+func (s *MainTestSuite) Test_SetupMetrics_InitializesHistogram() {
+	s.NotNil(histogram)
 }
 
 // RunServer
-
-func (s *MainTestSuite) Test_RunServer_InvokesHandleFuncWithHelloServer() {
-	httpHandleFuncOrig := httpHandleFunc
-	defer func() { httpHandleFunc = httpHandleFuncOrig }()
-	wasCalled := false
-	httpHandleFunc = func(pattern string, handler func(http.ResponseWriter, *http.Request)) {
-		if pattern == "/demo/hello" && reflect.ValueOf(handler) == reflect.ValueOf(HelloServer) {
-			wasCalled = true
-		}
-	}
-
-	RunServer()
-
-	s.True(wasCalled)
-}
-
-func (s *MainTestSuite) Test_RunServer_InvokesHandleFuncWithPersonServer() {
-	httpHandleFuncOrig := httpHandleFunc
-	defer func() { httpHandleFunc = httpHandleFuncOrig }()
-	wasCalled := false
-	httpHandleFunc = func(pattern string, handler func(http.ResponseWriter, *http.Request)) {
-		if pattern == "/demo/person" && reflect.ValueOf(handler) == reflect.ValueOf(PersonServer) {
-			wasCalled = true
-		}
-	}
-
-	RunServer()
-
-	s.True(wasCalled)
-}
-
-func (s *MainTestSuite) Test_RunServer_InvokesHandleFuncWithRandomErrorServer() {
-	httpHandleFuncOrig := httpHandleFunc
-	defer func() { httpHandleFunc = httpHandleFuncOrig }()
-	wasCalled := false
-	httpHandleFunc = func(pattern string, handler func(http.ResponseWriter, *http.Request)) {
-		if pattern == "/demo/random-error" && reflect.ValueOf(handler) == reflect.ValueOf(RandomErrorServer) {
-			wasCalled = true
-		}
-	}
-
-	RunServer()
-
-	s.True(wasCalled)
-}
 
 func (s *MainTestSuite) Test_RunServer_InvokesListenAndServe() {
 	actual := ""
@@ -160,14 +137,16 @@ func (s *MainTestSuite) Test_PersonServer_Panics_WhenUpsertIdReturnsError() {
 	req, _ := http.NewRequest("PUT", "/demo/person?name=Viktor", nil)
 	w := getResponseWriterMock()
 
-	s.Panics(func() { PersonServer(w, req) })
+	PersonServer(w, req)
+
+	w.AssertCalled(s.T(), "Write", []byte("This is an error"))
 }
 
 func (s *MainTestSuite) Test_PersonServer_WritesPeople() {
 	findPeopleOrig := findPeople
 	people := []Person{
-		Person{Name: "Viktor"},
-		Person{Name: "Sara"},
+		{Name: "Viktor"},
+		{Name: "Sara"},
 	}
 	defer func() { findPeople = findPeopleOrig }()
 	findPeople = func(res *[]Person) error {
@@ -192,21 +171,6 @@ func (s *MainTestSuite) Test_PersonServer_Panics_WhenFindReturnsError() {
 	w := getResponseWriterMock()
 
 	s.Panics(func() { PersonServer(w, req) })
-}
-
-// Suite
-
-func TestMainSuite(t *testing.T) {
-	logFatalOrig := logFatal
-	defer func() { logFatal = logFatalOrig }()
-	logFatal = func(v ...interface{}) {}
-	logPrintfOrig := logPrintf
-	defer func() { logPrintf = logPrintfOrig }()
-	logPrintf = func(format string, v ...interface{}) {}
-	httpListenAndServeOrig := httpListenAndServe
-	defer func() { httpListenAndServe = httpListenAndServeOrig }()
-	httpListenAndServe = func(addr string, handler http.Handler) error { return nil }
-	suite.Run(t, new(MainTestSuite))
 }
 
 type ResponseWriterMock struct {

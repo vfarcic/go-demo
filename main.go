@@ -1,35 +1,44 @@
 package main
 
 import (
+	"fmt"
+	"github.com/prometheus/client_golang/prometheus"
 	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 	"io"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"strconv"
-	"time"
-	"gopkg.in/mgo.v2/bson"
-	"fmt"
 	"strings"
-	"math/rand"
+	"time"
 )
 
 var coll *mgo.Collection
 var sleep = time.Sleep
 var logFatal = log.Fatal
 var logPrintf = log.Printf
-var httpHandleFunc = http.HandleFunc
 var httpListenAndServe = http.ListenAndServe
 
 type Person struct {
 	Name string
 }
 
-// TODO: Test
+var (
+	histogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name: "resp_time",
+		Help: "Request response time",
+	}, []string{"code", "method", "path", "query"})
+)
 
 func main() {
 	setupDb()
 	RunServer()
+}
+
+func init() {
+	prometheus.MustRegister(histogram)
 }
 
 // TODO: Test
@@ -47,13 +56,18 @@ func setupDb() {
 }
 
 func RunServer() {
-	httpHandleFunc("/demo/hello", HelloServer)
-	httpHandleFunc("/demo/person", PersonServer)
-	httpHandleFunc("/demo/random-error", RandomErrorServer)
-	logFatal("ListenAndServe: ", httpListenAndServe(":8080", nil))
+	mux := http.NewServeMux()
+	mux.HandleFunc("/demo/hello", HelloServer)
+	mux.HandleFunc("/demo/person", PersonServer)
+	mux.HandleFunc("/demo/random-error", RandomErrorServer)
+	mux.Handle("/metrics", prometheusHandler())
+	logFatal("ListenAndServe: ", httpListenAndServe(":8080", mux))
 }
 
 func HelloServer(w http.ResponseWriter, req *http.Request) {
+	start := time.Now()
+	defer func() { recordMetrics(start, req, http.StatusOK) }()
+
 	logPrintf("%s request to %s\n", req.Method, req.RequestURI)
 	delay := req.URL.Query().Get("delay")
 	if len(delay) > 0 {
@@ -64,28 +78,37 @@ func HelloServer(w http.ResponseWriter, req *http.Request) {
 }
 
 func RandomErrorServer(w http.ResponseWriter, req *http.Request) {
+	code := http.StatusOK
+	start := time.Now()
+	defer func() { recordMetrics(start, req, code) }()
+
 	logPrintf("%s request to %s\n", req.Method, req.RequestURI)
 	rand.Seed(time.Now().UnixNano())
 	n := rand.Intn(10)
+	msg := "Everything is still OK\n"
 	if n == 0 {
-		w.WriteHeader(http.StatusInternalServerError)
-		msg := "ERROR: Something, somewhere, went wrong!\n"
+		code = http.StatusInternalServerError
+		msg = "ERROR: Something, somewhere, went wrong!\n"
 		logPrintf(msg)
-		io.WriteString(w, msg)
-	} else {
-		io.WriteString(w, "Everything is still OK\n")
 	}
+	w.WriteHeader(code)
+	io.WriteString(w, msg)
 }
 
 func PersonServer(w http.ResponseWriter, req *http.Request) {
-	logPrintf("%s request to %s\n", req.Method, req.RequestURI)
+	code := http.StatusOK
+	start := time.Now()
+	defer func() { recordMetrics(start, req, code) }()
 
+	logPrintf("%s request to %s\n", req.Method, req.RequestURI)
+	msg := "Everything is OK"
 	if req.Method == "PUT" {
 		name := req.URL.Query().Get("name")
 		if _, err := upsertId(name, &Person{
 			Name: name,
 		}); err != nil {
-			panic(err)
+			code = http.StatusInternalServerError
+			msg = err.Error()
 		}
 	} else {
 		var res []Person
@@ -95,10 +118,15 @@ func PersonServer(w http.ResponseWriter, req *http.Request) {
 		var names []string
 		for _, p := range res {
 			names = append(names, p.Name)
-			io.WriteString(w, fmt.Sprintln(p.Name))
 		}
-		io.WriteString(w, strings.Join(names, "\n"))
+		msg = strings.Join(names, "\n")
 	}
+	w.WriteHeader(code)
+	io.WriteString(w, msg)
+}
+
+var prometheusHandler = func() http.Handler {
+	return prometheus.Handler()
 }
 
 var findPeople = func(res *[]Person) error {
@@ -109,3 +137,14 @@ var upsertId = func(id interface{}, update interface{}) (info *mgo.ChangeInfo, e
 	return coll.UpsertId(id, update)
 }
 
+func recordMetrics(start time.Time, req *http.Request, code int) {
+	duration := time.Since(start)
+	histogram.With(
+		prometheus.Labels{
+			"code": fmt.Sprintf("%d", code),
+			"method": req.Method,
+			"path": req.URL.Path,
+			"query": req.URL.RawQuery,
+		},
+	).Observe(duration.Seconds())
+}

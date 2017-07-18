@@ -7,14 +7,14 @@ import (
 	"github.com/stretchr/testify/suite"
 	"net/http"
 	"os"
+	"strconv"
 	"testing"
 	"time"
-	"strconv"
 )
 
 type ProductionTestSuite struct {
 	suite.Suite
-	hostIp      string
+	hostIp string
 }
 
 func (s *ProductionTestSuite) SetupTest() {
