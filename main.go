@@ -20,6 +20,7 @@ var sleep = time.Sleep
 var logFatal = log.Fatal
 var logPrintf = log.Printf
 var httpListenAndServe = http.ListenAndServe
+var serviceName = "go-demo"
 
 type Person struct {
 	Name string
@@ -29,7 +30,13 @@ var (
 	histogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Name: "resp_time",
 		Help: "Request response time",
-	}, []string{"code", "method", "path", "query"})
+	}, []string{
+		"service",
+		"code",
+		"method",
+		"path",
+		"query",
+	})
 )
 
 func main() {
@@ -141,6 +148,7 @@ func recordMetrics(start time.Time, req *http.Request, code int) {
 	duration := time.Since(start)
 	histogram.With(
 		prometheus.Labels{
+			"service": serviceName,
 			"code": fmt.Sprintf("%d", code),
 			"method": req.Method,
 			"path": req.URL.Path,
