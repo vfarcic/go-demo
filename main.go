@@ -28,6 +28,7 @@ type Person struct {
 
 var (
 	histogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Subsystem: "http_server",
 		Name: "resp_time",
 		Help: "Request response time",
 	}, []string{
@@ -35,11 +36,13 @@ var (
 		"code",
 		"method",
 		"path",
-		"query",
 	})
 )
 
 func main() {
+	if len(os.Getenv("SERVICE_NAME")) > 0 {
+		serviceName = os.Getenv("SERVICE_NAME")
+	}
 	setupDb()
 	RunServer()
 }
@@ -152,7 +155,6 @@ func recordMetrics(start time.Time, req *http.Request, code int) {
 			"code": fmt.Sprintf("%d", code),
 			"method": req.Method,
 			"path": req.URL.Path,
-			"query": req.URL.RawQuery,
 		},
 	).Observe(duration.Seconds())
 }
