@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 services:
 
@@ -17,7 +17,7 @@ services:
       labels:
         - com.df.notify=true
         - com.df.distribute=true
-        - com.df.servicePath=${PATH:-/demo}
+        - com.df.servicePath=${SERVICE_PATH:-/demo}
         - com.df.port=8080
 
   db:
