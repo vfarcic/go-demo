@@ -1,7 +1,7 @@
 FROM golang:1.11 AS build
 ADD . /src
 WORKDIR /src
-RUN go get -d -v -t
+RUN go get -d -v
 RUN go test --cover -v ./...
 RUN go build -v -o go-demo
 

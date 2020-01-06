@@ -8,7 +8,7 @@ services:
       - .:/usr/src/myapp
       - /tmp/go:/go
     working_dir: /usr/src/myapp
-    command: bash -c "pwd && go get -d -v -t && go test --cover -v ./... && go build -v -o go-demo"
+    command: bash -c "pwd && go get -d -v && go test --cover -v ./... && go build -v -o go-demo"
 
   staging-dep:
     extends:
@@ -25,14 +25,14 @@ services:
     environment:
       - HOST_IP=localhost:8080
     network_mode: host
-    command: bash -c "cd /usr/src/myapp && go get -d -v -t && go test --tags integration -v"
+    command: bash -c "cd /usr/src/myapp && go get -d -v && go test --tags integration -v"
 
   production:
     extends:
       service: unit
     environment:
       - HOST_IP=${HOST_IP}
-    command: bash -c "cd /usr/src/myapp && go get -d -v -t && go test --tags integration -v"
+    command: bash -c "cd /usr/src/myapp && go get -d -v && go test --tags integration -v"
 
   db:
     extends:
