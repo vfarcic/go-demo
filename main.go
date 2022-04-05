@@ -2,9 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/prometheus/client_golang/prometheus"
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
 	"io"
 	"log"
 	"math/rand"
@@ -13,6 +10,11 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/globalsign/mgo"
+	"github.com/globalsign/mgo/bson"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 var coll *mgo.Collection
@@ -29,8 +31,8 @@ type Person struct {
 var (
 	histogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Subsystem: "http_server",
-		Name: "resp_time",
-		Help: "Request response time",
+		Name:      "resp_time",
+		Help:      "Request response time",
 	}, []string{
 		"service",
 		"code",
@@ -152,9 +154,9 @@ func recordMetrics(start time.Time, req *http.Request, code int) {
 	histogram.With(
 		prometheus.Labels{
 			"service": serviceName,
-			"code": fmt.Sprintf("%d", code),
-			"method": req.Method,
-			"path": req.URL.Path,
+			"code":    fmt.Sprintf("%d", code),
+			"method":  req.Method,
+			"path":    req.URL.Path,
 		},
 	).Observe(duration.Seconds())
 }
